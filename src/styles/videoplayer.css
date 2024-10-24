@@ -1,0 +1,11 @@
+.video-container {
+  position: relative;
+  overflow: hidden;
+}
+
+video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 80px);
+}
