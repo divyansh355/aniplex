@@ -44,7 +44,9 @@ function Footer() {
   return (
     <div className="bg-black">
       <Genres animes={data.data.genres} />
-      <div className=" mb-4 w-full text-white text-center bg-black">The data is shown on this site does not belong to me.</div>
+      <div className=" mb-4 w-full text-white text-center bg-black">
+        ⚠️The data is shown on this site does not belong to me⚠️
+      </div>
     </div>
   );
 }
