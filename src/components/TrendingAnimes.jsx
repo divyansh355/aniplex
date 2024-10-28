@@ -12,6 +12,7 @@ const TrendingAnime = ({ animes }) => {
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
   const [hoveredAnimeId, setHoveredAnimeId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -40,6 +41,20 @@ const TrendingAnime = ({ animes }) => {
     if (storedData) {
       setData(JSON.parse(storedData));
     }
+  }, []);
+
+  // Check for mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768); // You can adjust this breakpoint
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call on mount to set initial state
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (loading) {
@@ -126,8 +141,8 @@ const TrendingAnime = ({ animes }) => {
               key={anime.id}
               className={`relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer transition-all duration-300 ${hoveredAnimeId === anime.id ? "backdrop-blur-lg" : ""
                 }`}
-              onMouseEnter={() => setHoveredAnimeId(anime.id)}
-              onMouseLeave={() => setHoveredAnimeId(null)}
+              onMouseEnter={() => !isMobile && setHoveredAnimeId(anime.id)}
+              onMouseLeave={() => !isMobile && setHoveredAnimeId(null)}
               onClick={() => handleAnimeClick(anime.id)}
             >
               <img
@@ -155,8 +170,19 @@ const TrendingAnime = ({ animes }) => {
                 {anime.type && (
                   <p className="text-xs text-gray-300">Type: {anime.type}</p>
                 )}
+                {/* Centered Watch button for mobile */}
+                {isMobile && hoveredAnimeId === anime.id && (
+                  <div className="mt-2">
+                    <button
+                      onClick={handleAnimeClick}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-md">
+                      Watch
+                    </button>
+                  </div>
+                )}
               </div>
-              {(hoveredAnimeId === anime.id) && (
+              {/* Centered Watch button for desktop */}
+              {!isMobile && (hoveredAnimeId === anime.id) && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <button
                     onClick={handleAnimeClick}

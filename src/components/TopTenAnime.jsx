@@ -11,7 +11,7 @@ const TopTenAnime = ({ animes }) => {
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [period, setPeriod] = useState("today");
-  const [hoveredAnimeId, setHoveredAnimeId] = useState(null);
+  const [hoveredAnimeId, setHoveredAnimeId] = useState(null); // Added for hover state
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
   const totalAnimes = data?.top10Animes?.[period]?.length || 0;
@@ -174,11 +174,12 @@ const TopTenAnime = ({ animes }) => {
                   {anime.type && (
                     <p className="text-xs text-gray-300">Type: {anime.type}</p>
                   )}
+                  {/* Watch button */}
                   {hoveredAnimeId === anime.id && (
                     <div className="mt-2">
                       <button
                         onClick={(e) => {
-                          e.stopPropagation();
+                          e.stopPropagation(); // Prevent the card click
                           handleAnimeClick(anime.id);
                         }}
                         className="w-full px-4 py-2 bg-blue-600 text-white rounded-md"

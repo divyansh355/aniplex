@@ -8,9 +8,11 @@ const LatestCompletedAnimes = ({ animes }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentIndex] = useState(0);
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
   const [hoveredAnimeId, setHoveredAnimeId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,6 +41,20 @@ const LatestCompletedAnimes = ({ animes }) => {
     if (storedData) {
       setData(JSON.parse(storedData));
     }
+  }, []);
+
+  // Check for mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint if necessary
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call on mount to set initial state
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (loading) {
@@ -88,7 +104,7 @@ const LatestCompletedAnimes = ({ animes }) => {
   };
 
   const handleWatchClick = (id, event) => {
-    event.stopPropagation();
+    event.stopPropagation(); // Prevent triggering the onClick of the parent div
     handleAnimeClick(id);
   };
 
@@ -136,8 +152,20 @@ const LatestCompletedAnimes = ({ animes }) => {
               {anime.type && (
                 <p className="text-xs text-gray-300">Type: {anime.type}</p>
               )}
+              {/* Centered Watch button for mobile */}
+              {isMobile && hoveredAnimeId === anime.id && (
+                <div className="mt-2">
+                  <button
+                    onClick={(event) => handleWatchClick(anime.id, event)}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md"
+                  >
+                    Watch
+                  </button>
+                </div>
+              )}
             </div>
-            {hoveredAnimeId === anime.id && (
+            {/* Centered Watch button for desktop */}
+            {!isMobile && hoveredAnimeId === anime.id && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <button
                   onClick={(event) => handleWatchClick(anime.id, event)}
@@ -150,6 +178,7 @@ const LatestCompletedAnimes = ({ animes }) => {
           </div>
         ))}
       </div>
+      
     </div>
   );
 };
