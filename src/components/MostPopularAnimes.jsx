@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import useStore from "@/utils/store";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
 
 const MostPopularAnimes = ({ animes }) => {
   const [data, setData] = useState(null);
@@ -10,8 +10,7 @@ const MostPopularAnimes = ({ animes }) => {
   const [error, setError] = useState(null);
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
-  const [hoveredAnimeId, setHoveredAnimeId] = useState(null); // Add hover state
-  const [isMobile, setIsMobile] = useState(false);
+  const [hoveredAnimeId, setHoveredAnimeId] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -41,20 +40,6 @@ const MostPopularAnimes = ({ animes }) => {
     if (storedData) {
       setData(JSON.parse(storedData));
     }
-  }, []);
-
-  // Check for mobile devices
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint if necessary
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize(); // Call on mount to set initial state
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
   }, []);
 
   if (loading) {
@@ -101,7 +86,7 @@ const MostPopularAnimes = ({ animes }) => {
 
   const handleAnimeClick = (id) => {
     setSelectedAnimeId(id);
-    router.push(`/watch/${id}`); // Navigate to watch page
+    router.push(`/watch/${id}`);
   };
 
   const displayedAnimes = mostPopularAnimes.slice(
@@ -149,20 +134,8 @@ const MostPopularAnimes = ({ animes }) => {
               {anime.type && (
                 <p className="text-xs text-gray-300">Type: {anime.type}</p>
               )}
-              {/* Centered Watch button for mobile */}
-              {isMobile && hoveredAnimeId === anime.id && (
-                <div className="mt-2">
-                  <button
-                    onClick={() => handleAnimeClick(anime.id)}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md"
-                  >
-                    Watch
-                  </button>
-                </div>
-              )}
             </div>
-            {/* Centered Watch button for desktop */}
-            {!isMobile && hoveredAnimeId === anime.id && (
+            {hoveredAnimeId === anime.id && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <button
                   onClick={() => handleAnimeClick(anime.id)}

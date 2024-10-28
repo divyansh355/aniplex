@@ -42,20 +42,6 @@ const UpcomingAnime = ({ animes }) => {
     }
   }, []);
 
-  // Check for mobile devices
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint if necessary
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize(); // Call on mount to set initial state
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">

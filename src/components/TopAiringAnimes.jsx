@@ -12,7 +12,6 @@ const UpcomingAnime = ({ animes }) => {
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
   const [hoveredAnimeId, setHoveredAnimeId] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -41,20 +40,6 @@ const UpcomingAnime = ({ animes }) => {
     if (storedData) {
       setData(JSON.parse(storedData));
     }
-  }, []);
-
-  // Check for mobile devices
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint if necessary
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize(); // Call on mount to set initial state
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
   }, []);
 
   if (loading) {
@@ -100,7 +85,7 @@ const UpcomingAnime = ({ animes }) => {
 
   const handleAnimeClick = (id) => {
     setSelectedAnimeId(id);
-    router.push(`/watch/${id}`); // Navigate to the watch page
+    router.push(`/watch/${id}`);
   };
 
   const handleNext = () => {
@@ -137,8 +122,8 @@ const UpcomingAnime = ({ animes }) => {
             <div
               key={anime.id}
               className={`relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer transition-all duration-300 ${hoveredAnimeId === anime.id ? "backdrop-blur-lg" : ""}`}
-              onMouseEnter={() => !isMobile && setHoveredAnimeId(anime.id)}
-              onMouseLeave={() => !isMobile && setHoveredAnimeId(null)}
+              onMouseEnter={() => setHoveredAnimeId(anime.id)}
+              onMouseLeave={() => setHoveredAnimeId(null)}
               onClick={() => handleAnimeClick(anime.id)}
             >
               <img
@@ -166,20 +151,9 @@ const UpcomingAnime = ({ animes }) => {
                 {anime.type && (
                   <p className="text-xs text-gray-300">Type: {anime.type}</p>
                 )}
-                {/* Centered Watch button for mobile */}
-                {isMobile && hoveredAnimeId === anime.id && (
-                  <div className="mt-2">
-                    <button
-                      onClick={() => handleAnimeClick(anime.id)}
-                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-md"
-                    >
-                      Watch
-                    </button>
-                  </div>
-                )}
+                
               </div>
-              {/* Centered Watch button for desktop */}
-              {!isMobile && hoveredAnimeId === anime.id && (
+              {hoveredAnimeId === anime.id && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <button
                     onClick={() => handleAnimeClick(anime.id)}
