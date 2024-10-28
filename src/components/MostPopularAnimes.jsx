@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import useStore from "@/utils/store";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 const MostPopularAnimes = ({ animes }) => {
   const [data, setData] = useState(null);
@@ -10,6 +11,9 @@ const MostPopularAnimes = ({ animes }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
+  const [hoveredAnimeId, setHoveredAnimeId] = useState(null); // Add hover state
+  const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,7 +25,6 @@ const MostPopularAnimes = ({ animes }) => {
         }
 
         setData(animes);
-
         localStorage.setItem("myData", JSON.stringify(animes));
 
         setLoading(false);
@@ -39,6 +42,20 @@ const MostPopularAnimes = ({ animes }) => {
     if (storedData) {
       setData(JSON.parse(storedData));
     }
+  }, []);
+
+  // Check for mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint if necessary
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call on mount to set initial state
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (loading) {
@@ -70,6 +87,7 @@ const MostPopularAnimes = ({ animes }) => {
       </div>
     );
   }
+
   if (error)
     return (
       <div className="text-red-500">Error fetching data: {error.message}</div>
@@ -84,6 +102,7 @@ const MostPopularAnimes = ({ animes }) => {
 
   const handleAnimeClick = (id) => {
     setSelectedAnimeId(id);
+    router.push(`/watch/${id}`); // Navigate to watch page
   };
 
   const handleNext = () => {
@@ -114,7 +133,9 @@ const MostPopularAnimes = ({ animes }) => {
         {displayedAnimes.map((anime) => (
           <div
             key={anime.id}
-            className="relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer"
+            className={`relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer transition-all duration-300 ${hoveredAnimeId === anime.id ? "backdrop-blur-lg" : ""}`}
+            onMouseEnter={() => setHoveredAnimeId(anime.id)}
+            onMouseLeave={() => setHoveredAnimeId(null)}
             onClick={() => handleAnimeClick(anime.id)}
           >
             <img
@@ -143,23 +164,31 @@ const MostPopularAnimes = ({ animes }) => {
               {anime.type && (
                 <p className="text-xs text-gray-300">Type: {anime.type}</p>
               )}
+              {/* Centered Watch button for mobile */}
+              {isMobile && hoveredAnimeId === anime.id && (
+                <div className="mt-2">
+                  <button
+                    onClick={() => handleAnimeClick(anime.id)}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md"
+                  >
+                    Watch
+                  </button>
+                </div>
+              )}
             </div>
+            {/* Centered Watch button for desktop */}
+            {!isMobile && hoveredAnimeId === anime.id && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <button
+                  onClick={() => handleAnimeClick(anime.id)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                >
+                  Watch
+                </button>
+              </div>
+            )}
           </div>
         ))}
-      </div>
-      <div className="flex justify-between mt-4">
-        <button
-          onClick={handlePrev}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Prev
-        </button>
-        <button
-          onClick={handleNext}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Next
-        </button>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import useStore from "@/utils/store";
+import { useRouter } from "next/navigation";
 
 const TrendingAnime = ({ animes }) => {
   const [data, setData] = useState(null);
@@ -10,6 +11,9 @@ const TrendingAnime = ({ animes }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
+  const [hoveredAnimeId, setHoveredAnimeId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,9 +25,7 @@ const TrendingAnime = ({ animes }) => {
         }
 
         setData(animes);
-
         localStorage.setItem("myData", JSON.stringify(animes));
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -39,6 +41,20 @@ const TrendingAnime = ({ animes }) => {
     if (storedData) {
       setData(JSON.parse(storedData));
     }
+  }, []);
+
+  // Check for mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768); // You can adjust this breakpoint
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call on mount to set initial state
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (loading) {
@@ -70,6 +86,7 @@ const TrendingAnime = ({ animes }) => {
       </div>
     );
   }
+
   if (error)
     return (
       <div className="text-red-500">Error fetching data: {error.message}</div>
@@ -84,18 +101,19 @@ const TrendingAnime = ({ animes }) => {
 
   const handleAnimeClick = (id) => {
     setSelectedAnimeId(id);
+    router.push(`/watch/${id}`);
   };
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex + itemsPerPage >= totalAnimes ? 0 : prevIndex + itemsPerPage
+      prevIndex + itemsPerPage >= totalAnimes ? prevIndex : prevIndex + itemsPerPage
     );
   };
 
   const handlePrev = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex - itemsPerPage < 0
-        ? Math.floor(totalAnimes / itemsPerPage) * itemsPerPage - itemsPerPage
+        ? prevIndex
         : prevIndex - itemsPerPage
     );
   };
@@ -108,56 +126,84 @@ const TrendingAnime = ({ animes }) => {
   return (
     <div className="py-8">
       <h2 className="text-2xl font-bold text-center mb-6">Trending Animes</h2>
-      <div className="flex flex-wrap justify-center gap-4">
-        {displayedAnimes.map((anime) => (
-          <div
-            key={anime.id}
-            className="relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer"
-            onClick={() => handleAnimeClick(anime.id)}
-          >
-            <img
-              src={anime.poster}
-              alt={anime.name}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-2">
-              <h3 className="text-sm font-semibold text-white truncate">
-                {anime.name} ({anime.jname})
-              </h3>
-              {anime.rank && (
-                <p className="text-xs text-gray-300">Rank: {anime.rank}</p>
-              )}
-              {anime.episodes && (
-                <p className="text-xs text-gray-300">
-                  Sub: {anime.episodes.sub}
-                </p>
-              )}
-              {anime.episodes && (
-                <p className="text-xs text-gray-300">
-                  Dub: {anime.episodes.dub}
-                </p>
-              )}
-              {anime.type && (
-                <p className="text-xs text-gray-300">Type: {anime.type}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between mt-4">
+      <div className="flex justify-around items-center">
         <button
           onClick={handlePrev}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          disabled={currentIndex === 0}
         >
           Prev
         </button>
+        <div className="flex flex-wrap justify-center gap-4">
+          {displayedAnimes.map((anime) => (
+            <div
+              key={anime.id}
+              className={`relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer transition-all duration-300 ${hoveredAnimeId === anime.id ? "backdrop-blur-lg" : ""
+                }`}
+              onMouseEnter={() => !isMobile && setHoveredAnimeId(anime.id)}
+              onMouseLeave={() => !isMobile && setHoveredAnimeId(null)}
+              onClick={() => handleAnimeClick(anime.id)}
+            >
+              <img
+                src={anime.poster}
+                alt={anime.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-2">
+                <h3 className="text-sm font-semibold text-white truncate">
+                  {anime.name} ({anime.jname})
+                </h3>
+                {anime.rank && (
+                  <p className="text-xs text-gray-300">Rank: {anime.rank}</p>
+                )}
+                {anime.episodes && (
+                  <p className="text-xs text-gray-300">
+                    Sub: {anime.episodes.sub}
+                  </p>
+                )}
+                {anime.episodes && (
+                  <p className="text-xs text-gray-300">
+                    Dub: {anime.episodes.dub}
+                  </p>
+                )}
+                {anime.type && (
+                  <p className="text-xs text-gray-300">Type: {anime.type}</p>
+                )}
+                {/* Centered Watch button for mobile */}
+                {isMobile && hoveredAnimeId === anime.id && (
+                  <div className="mt-2">
+                    <button
+                      onClick={handleAnimeClick}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-md">
+                      Watch
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* Centered Watch button for desktop */}
+              {!isMobile && (hoveredAnimeId === anime.id) && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button
+                    onClick={handleAnimeClick}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md">
+                    Watch
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
         <button
           onClick={handleNext}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${currentIndex + itemsPerPage >= totalAnimes ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          disabled={currentIndex + itemsPerPage >= totalAnimes}
         >
           Next
         </button>
       </div>
+
     </div>
   );
 };

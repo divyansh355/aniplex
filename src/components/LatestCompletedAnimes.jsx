@@ -11,6 +11,8 @@ const LatestCompletedAnimes = ({ animes }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
+  const [hoveredAnimeId, setHoveredAnimeId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,9 +25,7 @@ const LatestCompletedAnimes = ({ animes }) => {
         }
 
         setData(animes);
-
         localStorage.setItem("myData", JSON.stringify(animes));
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -41,6 +41,20 @@ const LatestCompletedAnimes = ({ animes }) => {
     if (storedData) {
       setData(JSON.parse(storedData));
     }
+  }, []);
+
+  // Check for mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint if necessary
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call on mount to set initial state
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (loading) {
@@ -72,21 +86,26 @@ const LatestCompletedAnimes = ({ animes }) => {
       </div>
     );
   }
-  if (error)
-    return (
-      <div className="text-red-500">Error fetching data: {error.message}</div>
-    );
+
+  if (error) {
+    return <div className="text-red-500">Error fetching data: {error.message}</div>;
+  }
 
   const latestCompletedAnimes = data?.latestCompletedAnimes || [];
   const totalAnimes = latestCompletedAnimes.length;
 
   if (totalAnimes === 0) {
-    return <div className="text-center">No upcoming anime available.</div>;
+    return <div className="text-center">No completed animes available.</div>;
   }
 
   const handleAnimeClick = (id) => {
     setSelectedAnimeId(id);
-    router.push(`/anime/${id}/episodes`);
+    router.push(`/watch/${id}`);
+  };
+
+  const handleWatchClick = (id, event) => {
+    event.stopPropagation(); // Prevent triggering the onClick of the parent div
+    handleAnimeClick(id);
   };
 
   const handleNext = () => {
@@ -118,6 +137,8 @@ const LatestCompletedAnimes = ({ animes }) => {
           <div
             key={anime.id}
             className="relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer"
+            onMouseEnter={() => setHoveredAnimeId(anime.id)}
+            onMouseLeave={() => setHoveredAnimeId(null)}
             onClick={() => handleAnimeClick(anime.id)}
           >
             <img
@@ -145,24 +166,33 @@ const LatestCompletedAnimes = ({ animes }) => {
               {anime.type && (
                 <p className="text-xs text-gray-300">Type: {anime.type}</p>
               )}
+              {/* Centered Watch button for mobile */}
+              {isMobile && hoveredAnimeId === anime.id && (
+                <div className="mt-2">
+                  <button
+                    onClick={(event) => handleWatchClick(anime.id, event)}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md"
+                  >
+                    Watch
+                  </button>
+                </div>
+              )}
             </div>
+            {/* Centered Watch button for desktop */}
+            {!isMobile && hoveredAnimeId === anime.id && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <button
+                  onClick={(event) => handleWatchClick(anime.id, event)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                >
+                  Watch
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
-      <div className="flex justify-between mt-4">
-        <button
-          onClick={handlePrev}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Prev
-        </button>
-        <button
-          onClick={handleNext}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Next
-        </button>
-      </div>
+      
     </div>
   );
 };

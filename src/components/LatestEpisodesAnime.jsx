@@ -11,6 +11,8 @@ const LatestEpisodesAnime = ({ animes }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
+  const [hoveredEpisodeId, setHoveredEpisodeId] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,9 +25,7 @@ const LatestEpisodesAnime = ({ animes }) => {
         }
 
         setData(animes);
-
         localStorage.setItem("myData", JSON.stringify(animes));
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -41,6 +41,20 @@ const LatestEpisodesAnime = ({ animes }) => {
     if (storedData) {
       setData(JSON.parse(storedData));
     }
+  }, []);
+
+  // Check for mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint if necessary
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call on mount to set initial state
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (loading) {
@@ -72,10 +86,10 @@ const LatestEpisodesAnime = ({ animes }) => {
       </div>
     );
   }
-  if (error)
-    return (
-      <div className="text-red-500">Error fetching data: {error.message}</div>
-    );
+
+  if (error) {
+    return <div className="text-red-500">Error fetching data: {error.message}</div>;
+  }
 
   const latestEpisodes = data?.latestEpisodeAnimes || [];
   const totalEpisodes = latestEpisodes.length;
@@ -109,53 +123,77 @@ const LatestEpisodesAnime = ({ animes }) => {
   return (
     <div className="py-8">
       <h2 className="text-2xl font-bold text-center mb-6">Latest Episodes</h2>
-      <div className="flex flex-wrap justify-center gap-4">
-        {displayedEpisodes.map((episode) => (
-          <div
-            key={episode.id}
-            className="relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer"
-            onClick={() => handleAnimeClick(episode.id)}
-          >
-            <img
-              src={episode.poster}
-              alt={episode.name}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-2">
-              <h3 className="text-sm font-semibold text-white truncate">
-                {episode.name} ({episode.jname})
-              </h3>
-              <p className="text-xs text-gray-300">
-                Duration: {episode.duration}
-              </p>
-              <p className="text-xs text-gray-300">Type: {episode.type}</p>
-              <p className="text-xs text-gray-300">
-                Episodes: Sub: {episode.episodes.sub}{" "}
-                {episode.episodes.dub ? `| Dub: ${episode.episodes.dub}` : ""}
-              </p>
-              {episode.rating && (
-                <p className="text-xs text-red-500">Rating: {episode.rating}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between mt-4">
+      <div className="flex justify-around items-center">
         <button
           onClick={handlePrev}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={currentIndex === 0}
         >
           Prev
         </button>
+        <div className="flex flex-wrap justify-center gap-4">
+          {displayedEpisodes.map((episode) => (
+            <div
+              key={episode.id}
+              className={`relative w-40 h-60 overflow-hidden rounded-lg shadow-lg cursor-pointer transition-all duration-300 ${hoveredEpisodeId === episode.id ? "backdrop-blur-lg" : ""}`}
+              onMouseEnter={() => !isMobile && setHoveredEpisodeId(episode.id)}
+              onMouseLeave={() => !isMobile && setHoveredEpisodeId(null)}
+              onClick={() => handleAnimeClick(episode.id)}
+            >
+              <img
+                src={episode.poster}
+                alt={episode.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-2">
+                <h3 className="text-sm font-semibold text-white truncate">
+                  {episode.name} ({episode.jname})
+                </h3>
+                <p className="text-xs text-gray-300">Duration: {episode.duration}</p>
+                <p className="text-xs text-gray-300">Type: {episode.type}</p>
+                <p className="text-xs text-gray-300">
+                  Episodes: Sub: {episode.episodes.sub}{" "}
+                  {episode.episodes.dub ? `| Dub: ${episode.episodes.dub}` : ""}
+                </p>
+                {episode.rating && (
+                  <p className="text-xs text-red-500">Rating: {episode.rating}</p>
+                )}
+                {/* Centered Watch button for mobile */}
+                {isMobile && hoveredEpisodeId === episode.id && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => handleAnimeClick(episode.id)}
+                      className="w-full px-4 py-2 bg-blue-600 text-white rounded-md"
+                    >
+                      Watch
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* Centered Watch button for desktop */}
+              {!isMobile && hoveredEpisodeId === episode.id && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button
+                    onClick={() => handleAnimeClick(episode.id)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                  >
+                    Watch
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
         <button
           onClick={handleNext}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700
+          ${currentIndex + itemsPerPage >= totalEpisodes ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={currentIndex + itemsPerPage >= totalEpisodes}
         >
           Next
         </button>
       </div>
+
     </div>
   );
 };
