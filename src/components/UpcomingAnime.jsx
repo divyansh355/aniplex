@@ -12,7 +12,6 @@ const UpcomingAnime = ({ animes }) => {
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
   const [hoveredAnimeId, setHoveredAnimeId] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
   useEffect(() => {

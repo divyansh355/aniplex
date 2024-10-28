@@ -8,7 +8,6 @@ const MostPopularAnimes = ({ animes }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const setSelectedAnimeId = useStore((state) => state.setSelectedAnimeId);
   const [hoveredAnimeId, setHoveredAnimeId] = useState(null); // Add hover state
@@ -103,20 +102,6 @@ const MostPopularAnimes = ({ animes }) => {
   const handleAnimeClick = (id) => {
     setSelectedAnimeId(id);
     router.push(`/watch/${id}`); // Navigate to watch page
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex + itemsPerPage >= totalAnimes ? 0 : prevIndex + itemsPerPage
-    );
-  };
-
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex - itemsPerPage < 0
-        ? Math.floor(totalAnimes / itemsPerPage) * itemsPerPage - itemsPerPage
-        : prevIndex - itemsPerPage
-    );
   };
 
   const displayedAnimes = mostPopularAnimes.slice(
