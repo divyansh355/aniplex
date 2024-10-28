@@ -19,9 +19,9 @@ const Navbar = () => {
 
         <div className="hidden md:flex space-x-4 items-center">
           {/* Navbar Links */}
-          <Link href="/home" className="text-gray-300 hover:text-white">
+          {/* <Link href="/home" className="text-gray-300 hover:text-white">
             Home
-          </Link>
+          </Link> */}
 
           {/* Search Bar */}
           <SearchBar />
